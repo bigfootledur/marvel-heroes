@@ -46,6 +46,9 @@ public class MongoDBRepository {
 
     public CompletionStage<List<YearAndUniverseStat>> countByYearAndUniverse() {
         List<Document> pipeline = new ArrayList<>();
+        pipeline.add(Document.parse("{ $group: { _id: {yearAppearance: \"$yearAppearance\", universe: \"$universe\"}, count: { $sum: 1 } } }"));
+        pipeline.add(Document.parse("{$group: {_id: \"$_id\", byUniverse: {$push: {universe: \"$_id\", count:\"$count\"}}}}"));
+        pipeline.add(Document.parse("{ $sort: {_id: -1} }"));
         return ReactiveStreamsUtils.fromMultiPublisher(heroesCollection.aggregate(pipeline))
                 .thenApply(documents -> {
                     return documents.stream()
